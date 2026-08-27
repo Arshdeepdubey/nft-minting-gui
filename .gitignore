@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.next/
+.env
+.env.local
+coverage/
+artifacts/
+cache/
+typechain-types/
+*.log
+.DS_Store

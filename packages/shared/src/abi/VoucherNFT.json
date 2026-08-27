@@ -1,0 +1,51 @@
+[
+  {
+    "type": "function",
+    "name": "redeem",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "voucher",
+        "type": "tuple",
+        "components": [
+          { "name": "tokenId", "type": "uint256" },
+          { "name": "recipient", "type": "address" },
+          { "name": "uri", "type": "string" },
+          { "name": "expiresAt", "type": "uint256" },
+          { "name": "signature", "type": "bytes" }
+        ]
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "stateMutability": "view",
+    "inputs": [{ "name": "tokenId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "address" }]
+  },
+  {
+    "type": "function",
+    "name": "redeemed",
+    "stateMutability": "view",
+    "inputs": [{ "name": "tokenId", "type": "uint256" }],
+    "outputs": [{ "name": "", "type": "bool" }]
+  },
+  {
+    "type": "function",
+    "name": "minterSigner",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address" }]
+  },
+  {
+    "type": "event",
+    "name": "VoucherRedeemed",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "indexed": true },
+      { "name": "recipient", "type": "address", "indexed": true }
+    ],
+    "anonymous": false
+  }
+]

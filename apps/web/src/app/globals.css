@@ -1,0 +1,42 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+main {
+  width: 100%;
+  max-width: 480px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.voucher-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+button.claim-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button.claim-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

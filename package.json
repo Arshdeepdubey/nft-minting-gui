@@ -1,0 +1,24 @@
+{
+  "name": "nft-minting-gui",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "contracts",
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "compile:contracts": "npm run compile --workspace=contracts",
+    "test:contracts": "npm run test --workspace=contracts",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  },
+  "license": "MIT"
+}
