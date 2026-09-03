@@ -1,28 +1,48 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import { config } from "./config.js";
-import { authRoutes } from "./routes/auth.js";
-import { voucherRoutes } from "./routes/voucher.js";
-import { internalRoutes } from "./routes/internal.js";
+import express from "express";
+import cors from "cors";
+import pinoHttp from "pino-http";
+import rateLimit from "express-rate-limit";
+import passport from "passport";
+import { config } from "./config";
+import { logger } from "./utils/logger";
+import { connectMongo } from "./db/mongoose";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
+import authRoutes from "./routes/auth";
+import adminRoutes from "./routes/admin";
+import userRoutes from "./routes/user";
 
-async function main() {
-  const app = Fastify({ logger: true });
+export function createApp() {
+  const app = express();
 
-  await app.register(cors, {
-    origin: config.siweOrigin,
-    credentials: true,
-  });
+  app.use(cors({ origin: config.frontendUrl, credentials: true }));
+  app.use(express.json());
+  app.use(pinoHttp({ logger }));
+  app.use(rateLimit({ windowMs: config.rateLimit.windowMs, max: config.rateLimit.max }));
+  app.use(passport.initialize());
 
-  app.get("/health", async () => ({ status: "ok" }));
+  app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
-  await app.register(authRoutes);
-  await app.register(voucherRoutes);
-  await app.register(internalRoutes);
+  app.use("/auth", authRoutes);
+  app.use("/admin", adminRoutes);
+  app.use("/user", userRoutes);
 
-  await app.listen({ port: config.port, host: "0.0.0.0" });
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
+  return app;
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+async function main() {
+  await connectMongo();
+  const app = createApp();
+  app.listen(config.port, () => {
+    logger.info(`Backend listening on http://localhost:${config.port}`);
+  });
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    logger.error({ err }, "Failed to start server");
+    process.exit(1);
+  });
+}

@@ -1,52 +1,99 @@
-import type { FastifyInstance } from "fastify";
-import { SiweMessage, generateNonce } from "siwe";
+import { Router } from "express";
 import { z } from "zod";
-import { issueSessionToken } from "../middleware/siweAuth.js";
-import { config } from "../config.js";
+import "../services/passportGoogle";
+import { passport } from "../services/passportGoogle";
+import { config } from "../config";
+import { requireAuth } from "../middlewares/requireAuth";
+import { validate } from "../middlewares/validate";
+import { HttpError } from "../utils/HttpError";
+import { User, type UserDocument } from "../models/User";
+import { issueTokens, rotateRefreshToken, revokeRefreshToken } from "../services/authService";
+import { createWalletLinkNonce, verifyAndLinkWallet } from "../services/walletLinkService";
 
-// In-memory nonce store keyed by nonce. Swap for Redis in production
-// so nonces survive restarts and work across multiple API instances.
-const nonces = new Set<string>();
+const router = Router();
 
-const verifyBodySchema = z.object({
-  message: z.string(),
-  signature: z.string(),
+router.get("/google", passport.authenticate("google", { session: false, scope: ["profile", "email"] }));
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: `${config.frontendUrl}/login?error=1` }),
+  async (req, res, next) => {
+    try {
+      const user = req.user as UserDocument;
+      const { accessToken, refreshToken } = await issueTokens(user);
+      const redirectUrl = new URL("/auth/callback", config.frontendUrl);
+      redirectUrl.searchParams.set("accessToken", accessToken);
+      redirectUrl.searchParams.set("refreshToken", refreshToken);
+      res.redirect(redirectUrl.toString());
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+const refreshSchema = z.object({ refreshToken: z.string().min(1) });
+
+router.post("/refresh", validate({ body: refreshSchema }), async (req, res, next) => {
+  try {
+    const tokens = await rotateRefreshToken(req.body.refreshToken);
+    res.json(tokens);
+  } catch (err) {
+    next(err);
+  }
 });
 
-export async function authRoutes(app: FastifyInstance) {
-  // 1. Frontend requests a nonce before prompting the wallet to sign.
-  app.get("/auth/nonce", async (_req, reply) => {
-    const nonce = generateNonce();
-    nonces.add(nonce);
-    return reply.send({ nonce });
-  });
+router.post("/logout", requireAuth, async (req, res, next) => {
+  try {
+    await revokeRefreshToken(req.user!.id);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
 
-  // 2. Frontend submits the SIWE message + wallet signature for verification.
-  app.post("/auth/verify", async (req, reply) => {
-    const parsed = verifyBodySchema.safeParse(req.body);
-    if (!parsed.success) {
-      return reply.code(400).send({ error: "Invalid request body" });
-    }
+router.post("/wallet/nonce", requireAuth, async (req, res, next) => {
+  try {
+    const result = await createWalletLinkNonce(req.user!.id);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
 
-    const { message, signature } = parsed.data;
-    const siweMessage = new SiweMessage(message);
+const walletVerifySchema = z.object({
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid wallet address"),
+  signature: z.string().min(1),
+});
 
+router.post(
+  "/wallet/verify",
+  requireAuth,
+  validate({ body: walletVerifySchema }),
+  async (req, res, next) => {
     try {
-      const result = await siweMessage.verify({
-        signature,
-        domain: config.siweDomain,
-      });
-
-      if (!nonces.has(result.data.nonce)) {
-        return reply.code(401).send({ error: "Unknown or reused nonce" });
-      }
-      nonces.delete(result.data.nonce);
-
-      const token = issueSessionToken(result.data.address);
-      return reply.send({ token, walletAddress: result.data.address });
+      const { walletAddress, signature } = req.body;
+      const user = await verifyAndLinkWallet(req.user!.id, walletAddress, signature);
+      res.json({ walletAddress: user.walletAddress });
     } catch (err) {
-      req.log.error(err);
-      return reply.code(401).send({ error: "SIWE verification failed" });
+      next(err);
     }
-  });
-}
+  }
+);
+
+router.get("/me", requireAuth, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user!.id);
+    if (!user) throw HttpError.notFound("User not found");
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      walletAddress: user.walletAddress ?? null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;
