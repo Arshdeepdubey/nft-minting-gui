@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0f0f14;
+  color: #f2f2f2;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.nft-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.nft-card {
+  background: #1a1a24;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  width: fit-content;
+}
+
+.badge-locked { background: #555; }
+.badge-unlocked { background: #2563eb; }
+.badge-claimed { background: #16a34a; }
+
+.error { color: #f87171; }
+.status { color: #93c5fd; }
+
+button, .button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  background: #2563eb;
+  color: white;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #333;
+}
