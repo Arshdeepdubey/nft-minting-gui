@@ -4,21 +4,25 @@
   "version": "0.1.0",
   "workspaces": [
     "contracts",
-    "apps/*",
-    "packages/*"
+    "backend",
+    "frontend",
+    "shared"
   ],
   "scripts": {
-    "dev:api": "npm run dev --workspace=apps/api",
-    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
     "compile:contracts": "npm run compile --workspace=contracts",
     "test:contracts": "npm run test --workspace=contracts",
-    "lint": "eslint . --ext .ts,.tsx",
+    "test:backend": "npm run test --workspace=backend",
+    "test:frontend": "npm run test --workspace=frontend",
+    "lint": "eslint .",
     "format": "prettier --write ."
   },
   "devDependencies": {
     "eslint": "^9.9.0",
     "prettier": "^3.3.3",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.69.0"
   },
   "license": "MIT"
 }
