@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: nft-minting-gui-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: nft_minting_gui
+
+  hardhat-node:
+    image: node:20-alpine
+    container_name: nft-minting-gui-hardhat-node
+    working_dir: /app/contracts
+    volumes:
+      - ./:/app
+    command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
+    ports:
+      - "8545:8545"
+
+volumes:
+  mongo-data:

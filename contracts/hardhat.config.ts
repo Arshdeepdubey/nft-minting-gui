@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: "../.env" });
 
 const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY ?? "";
-const RPC_URL = process.env.RPC_URL ?? "";
+const AMOY_RPC_URL = process.env.AMOY_RPC_URL ?? process.env.RPC_URL ?? "";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -16,13 +16,16 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
-    sepolia: {
-      url: RPC_URL || "https://rpc.sepolia.org",
+    amoy: {
+      url: AMOY_RPC_URL || "https://rpc-amoy.polygon.technology",
+      chainId: 80002,
       accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY ?? "",
+    apiKey: {
+      polygonAmoy: process.env.POLYGONSCAN_API_KEY ?? "",
+    },
   },
 };
 
